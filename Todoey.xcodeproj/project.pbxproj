@@ -92,7 +92,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1120;
 				LastUpgradeCheck = 1120;
-				ORGANIZATIONNAME = "App Brewery";
+				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					EB2BE4F5239524DB00FB933B = {
 						CreatedOnToolsVersion = 11.2.1;
@@ -281,13 +281,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7HMM775WP5;
 				INFOPLIST_FILE = Todoey/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.londonappbrewery.todoey-ios13.Todoey";
+				PRODUCT_BUNDLE_IDENTIFIER = "NST.todoey-ios13.Todoey";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -299,13 +300,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7HMM775WP5;
 				INFOPLIST_FILE = Todoey/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.londonappbrewery.todoey-ios13.Todoey";
+				PRODUCT_BUNDLE_IDENTIFIER = "NST.todoey-ios13.Todoey";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
