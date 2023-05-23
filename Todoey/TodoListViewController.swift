@@ -40,7 +40,7 @@ class TodoListViewController: UITableViewController {
 //		   navigationController?.navigationBar.scrollEdgeAppearance = appearance
 //   }
 	
-	// MARK: - Table view data source
+	// MARK: - TableView Datasource Methods
 
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		// #warning Incomplete implementation, return the number of rows
@@ -54,5 +54,42 @@ class TodoListViewController: UITableViewController {
 		return cell
 	}
 	
-}
+	// MARK: - TableView Delegate Methods
 
+	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+		if let cell = tableView.cellForRow(at: indexPath) {
+			if cell.accessoryType == .checkmark {
+				cell.accessoryType = .none
+			} else {
+				cell.accessoryType = .checkmark
+			}
+		}
+		tableView.deselectRow(at: indexPath, animated: true)
+		
+		// Handle row selection logic here
+	}
+
+	override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+		// Handle accessory button tap logic here
+	}
+
+	override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+		// Return the desired height for rows in the table view
+		return 44
+	}
+
+	override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+		// Perform custom cell configuration or animation before the cell is displayed
+	}
+
+	override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+		// Return true if the row at the specified index path can be edited (e.g., delete or move)
+		return true
+	}
+
+	override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+		if editingStyle == .delete {
+			// Handle row deletion logic here
+		}
+	}
+}
