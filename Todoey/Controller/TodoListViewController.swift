@@ -9,53 +9,45 @@
 import UIKit
 
 class TodoListViewController: UITableViewController {
-
-	override func didReceiveMemoryWarning() {
-		super.didReceiveMemoryWarning()
-		// Dispose of any resources that can be recreated.
-	}
 	
-	// MARK: - Persistent Local Data Storage Using UserDefaults
-	
-	let defaults = UserDefaults.standard
+	var itemArray = [Item]()
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		// Do any additional setup after loading the view.
-
+		
 		tableView.allowsMultipleSelection = true // Enable multiple selection in the table view
 		loadItems()
 	}
 	
 	// MARK: - TableView Datasource Methods
-
+	
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return Item.itemArray.count
+		return itemArray.count
 	}
-
+	
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-		cell.textLabel?.text = Item.itemArray[indexPath.row]
-		cell.accessoryType = Item.itemStates[indexPath.row] ? .checkmark : .none // Set the accessory type based on the item state
-
+		let item = itemArray[indexPath.row]
+		cell.textLabel?.text = item.title
+		cell.accessoryType = item.done ? .checkmark : .none // Set the accessory type based on the item state
+		
 		return cell
 	}
 	
 	// MARK: - TableView Delegate Methods
-
+	
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		if let cell = tableView.cellForRow(at: indexPath) {
-			cell.accessoryType = (cell.accessoryType == .checkmark) ? .none : .checkmark
-			Item.itemStates[indexPath.row] = (cell.accessoryType == .checkmark) ? true : false
-		}
+		itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+		saveItems()
+		tableView.reloadData()
 		tableView.deselectRow(at: indexPath, animated: true)
 	}
-
 	
 	override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
 		if let cell = tableView.cellForRow(at: indexPath) {
 			cell.accessoryType = .none
-			Item.itemStates[indexPath.row] = false // Update the item state to unchecked
+			itemArray[indexPath.row].done = false // Update the item state to unchecked
+			saveItems()
 		}
 	}
 
@@ -76,11 +68,10 @@ class TodoListViewController: UITableViewController {
 		// Return true if the row at the specified index path can be edited (e.g., delete or move)
 		return true
 	}
-
+	
 	override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
 		if editingStyle == .delete {
-			Item.itemArray.remove(at: indexPath.row)
-			Item.itemStates.remove(at: indexPath.row)
+			itemArray.remove(at: indexPath.row)
 			saveItems()
 			tableView.deleteRows(at: [indexPath], with: .fade)
 		}
@@ -90,38 +81,40 @@ class TodoListViewController: UITableViewController {
 	
 	@IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
 		let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
-
-		let action = UIAlertAction(title: "Add Item", style: .default) { action in
+		
+		let action = UIAlertAction(title: "Add Item", style: .default) { [weak self] action in
 			if let newItemText = alert.textFields?.first?.text {
-				Item.itemArray.append(newItemText)
-				Item.itemStates.append(false) // Set the initial state of the new item as unchecked
-				self.saveItems()
-				self.tableView.reloadData()
+				let newItem = Item(title: newItemText, done: false)
+				self?.itemArray.append(newItem)
+				self?.saveItems()
+				self?.tableView.reloadData()
 			}
 		}
-
+		
 		alert.addTextField { alertTextField in
 			alertTextField.placeholder = "Create new item"
 		}
-
+		
 		alert.addAction(action)
-
+		
 		present(alert, animated: true, completion: nil)
 	}
 	
 	// MARK: - Data Persistence
 
 	func saveItems() {
-		UserDefaults.standard.set(Item.itemArray, forKey: "TodoListArray")
-		UserDefaults.standard.set(Item.itemStates, forKey: "TodoListStates")
+		let encoder = JSONEncoder()
+		if let encodedData = try? encoder.encode(itemArray) {
+			UserDefaults.standard.set(encodedData, forKey: "TodoListArray")
+		}
 	}
 
 	func loadItems() {
-		if let items = UserDefaults.standard.array(forKey: "TodoListArray") as? [String] {
-			Item.itemArray = items
-		}
-		if let states = UserDefaults.standard.array(forKey: "TodoListStates") as? [Bool] {
-			Item.itemStates = states
+		if let encodedData = UserDefaults.standard.data(forKey: "TodoListArray") {
+			let decoder = JSONDecoder()
+			if let decodedData = try? decoder.decode([Item].self, from: encodedData) {
+				itemArray = decodedData
+			}
 		}
 	}
 	

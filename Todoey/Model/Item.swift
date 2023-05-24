@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Item {
-	static var itemArray = [String]()
-	static var itemStates = [Bool]() // Array to store the state of each item (checked or unchecked)
+struct Item: Codable {
+	var title: String
+	var done: Bool
 }
