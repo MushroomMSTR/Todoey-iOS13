@@ -12,15 +12,24 @@ class TodoListViewController: UITableViewController {
 
 	var itemArray = ["Learn Swift", "Read a book", "Buy new course"]
 	
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view.
-    }
-	
 	override func didReceiveMemoryWarning() {
 		super.didReceiveMemoryWarning()
 		// Dispose of any resources that can be recreated.
 	}
+	
+	// MARK: - Persistent Local Data Storage Using UserDefaults
+	
+	let defaults = UserDefaults.standard
+	
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		// Do any additional setup after loading the view.
+		
+		if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+			itemArray = items
+		}
+	}
+	
 	
 //	// MARK: - Navigation Controller - Navigation Bar - Bar tint
 //
@@ -101,6 +110,8 @@ class TodoListViewController: UITableViewController {
 			if let newItemText = alert.textFields?.first?.text {
 				// Add the new item to your itemArray
 				self.itemArray.append(newItemText)
+				
+				self.defaults.set(self.itemArray, forKey: "TodoListArray") // Persistent Local Data Storage Using UserDefaults
 				
 				// Reload the table view to reflect the changes
 				self.tableView.reloadData()
