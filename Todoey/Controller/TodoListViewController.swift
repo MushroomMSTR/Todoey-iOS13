@@ -2,32 +2,38 @@
 //  TodoListViewController.swift
 //  Todoey
 //
-//  Created by Philipp Muellauer on 02/12/2019.
-//  Copyright © 2019 App Brewery. All rights reserved.
+//  Created by NazarStf on 23.05.2023.
 //
 
 import UIKit
 
 class TodoListViewController: UITableViewController {
 	
-	var itemArray = [Item]()
+	private var dataModel = DataModel()
+	
+	override func didReceiveMemoryWarning() {
+		super.didReceiveMemoryWarning()
+		// Dispose of any resources that can be recreated.
+	}
+	
+	// MARK: - Persistent Local Data Storage Using plist
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		// Do any additional setup after loading the view.
 		
 		tableView.allowsMultipleSelection = true // Enable multiple selection in the table view
-		loadItems()
 	}
 	
 	// MARK: - TableView Datasource Methods
 	
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return itemArray.count
+		return dataModel.getItems().count
 	}
 	
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-		let item = itemArray[indexPath.row]
+		let item = dataModel.getItems()[indexPath.row]
 		cell.textLabel?.text = item.title
 		cell.accessoryType = item.done ? .checkmark : .none // Set the accessory type based on the item state
 		
@@ -37,17 +43,21 @@ class TodoListViewController: UITableViewController {
 	// MARK: - TableView Delegate Methods
 	
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-		saveItems()
-		tableView.reloadData()
+		if let cell = tableView.cellForRow(at: indexPath) {
+			let item = dataModel.getItems()[indexPath.row]
+			let updatedItem = Item(title: item.title, done: !item.done)
+			dataModel.updateItem(at: indexPath.row, withUpdatedItem: updatedItem)
+			cell.accessoryType = updatedItem.done ? .checkmark : .none
+		}
 		tableView.deselectRow(at: indexPath, animated: true)
 	}
 	
 	override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
 		if let cell = tableView.cellForRow(at: indexPath) {
 			cell.accessoryType = .none
-			itemArray[indexPath.row].done = false // Update the item state to unchecked
-			saveItems()
+			let item = dataModel.getItems()[indexPath.row]
+			let updatedItem = Item(title: item.title, done: false)
+			dataModel.updateItem(at: indexPath.row, withUpdatedItem: updatedItem)
 		}
 	}
 
@@ -71,8 +81,7 @@ class TodoListViewController: UITableViewController {
 	
 	override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
 		if editingStyle == .delete {
-			itemArray.remove(at: indexPath.row)
-			saveItems()
+			dataModel.deleteItem(at: indexPath.row)
 			tableView.deleteRows(at: [indexPath], with: .fade)
 		}
 	}
@@ -85,8 +94,7 @@ class TodoListViewController: UITableViewController {
 		let action = UIAlertAction(title: "Add Item", style: .default) { [weak self] action in
 			if let newItemText = alert.textFields?.first?.text {
 				let newItem = Item(title: newItemText, done: false)
-				self?.itemArray.append(newItem)
-				self?.saveItems()
+				self?.dataModel.addItem(newItem)
 				self?.tableView.reloadData()
 			}
 		}
@@ -99,23 +107,4 @@ class TodoListViewController: UITableViewController {
 		
 		present(alert, animated: true, completion: nil)
 	}
-	
-	// MARK: - Data Persistence
-
-	func saveItems() {
-		let encoder = JSONEncoder()
-		if let encodedData = try? encoder.encode(itemArray) {
-			UserDefaults.standard.set(encodedData, forKey: "TodoListArray")
-		}
-	}
-
-	func loadItems() {
-		if let encodedData = UserDefaults.standard.data(forKey: "TodoListArray") {
-			let decoder = JSONDecoder()
-			if let decodedData = try? decoder.decode([Item].self, from: encodedData) {
-				itemArray = decodedData
-			}
-		}
-	}
-	
 }
