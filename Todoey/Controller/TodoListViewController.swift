@@ -10,8 +10,6 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-	var itemArray = ["Learn Swift", "Read a book", "Buy new course"]
-	
 	override func didReceiveMemoryWarning() {
 		super.didReceiveMemoryWarning()
 		// Dispose of any resources that can be recreated.
@@ -24,41 +22,22 @@ class TodoListViewController: UITableViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		// Do any additional setup after loading the view.
-		
-		if let items = defaults.array(forKey: "TodoListArray") as? [String] {
-			itemArray = items
-		}
+
+		tableView.allowsMultipleSelection = true // Enable multiple selection in the table view
+		loadItems()
 	}
-	
-	
-//	// MARK: - Navigation Controller - Navigation Bar - Bar tint
-//
-//	override func viewWillAppear(_ animated: Bool) {
-//		   super.viewWillAppear(animated)
-//		   navigationController?.navigationBar.prefersLargeTitles = true
-//
-//		   let appearance = UINavigationBarAppearance()
-//		   appearance.backgroundColor = .systemBlue
-//		   appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-//		   appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-//
-//		   navigationController?.navigationBar.tintColor = .white
-//		   navigationController?.navigationBar.standardAppearance = appearance
-//		   navigationController?.navigationBar.compactAppearance = appearance
-//		   navigationController?.navigationBar.scrollEdgeAppearance = appearance
-//   }
 	
 	// MARK: - TableView Datasource Methods
 
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		// #warning Incomplete implementation, return the number of rows
-		return itemArray.count
+		return Item.itemArray.count
 	}
-	
+
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-		cell.textLabel?.text = itemArray[indexPath.row]
-		
+		cell.textLabel?.text = Item.itemArray[indexPath.row]
+		cell.accessoryType = Item.itemStates[indexPath.row] ? .checkmark : .none // Set the accessory type based on the item state
+
 		return cell
 	}
 	
@@ -66,15 +45,18 @@ class TodoListViewController: UITableViewController {
 
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		if let cell = tableView.cellForRow(at: indexPath) {
-			if cell.accessoryType == .checkmark {
-				cell.accessoryType = .none
-			} else {
-				cell.accessoryType = .checkmark
-			}
+			cell.accessoryType = (cell.accessoryType == .checkmark) ? .none : .checkmark
+			Item.itemStates[indexPath.row] = (cell.accessoryType == .checkmark) ? true : false
 		}
 		tableView.deselectRow(at: indexPath, animated: true)
-		
-		// Handle row selection logic here
+	}
+
+	
+	override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+		if let cell = tableView.cellForRow(at: indexPath) {
+			cell.accessoryType = .none
+			Item.itemStates[indexPath.row] = false // Update the item state to unchecked
+		}
 	}
 
 	override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
@@ -97,7 +79,10 @@ class TodoListViewController: UITableViewController {
 
 	override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
 		if editingStyle == .delete {
-			// Handle row deletion logic here
+			Item.itemArray.remove(at: indexPath.row)
+			Item.itemStates.remove(at: indexPath.row)
+			saveItems()
+			tableView.deleteRows(at: [indexPath], with: .fade)
 		}
 	}
 	
@@ -105,26 +90,39 @@ class TodoListViewController: UITableViewController {
 	
 	@IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
 		let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
-		
+
 		let action = UIAlertAction(title: "Add Item", style: .default) { action in
 			if let newItemText = alert.textFields?.first?.text {
-				// Add the new item to your itemArray
-				self.itemArray.append(newItemText)
-				
-				self.defaults.set(self.itemArray, forKey: "TodoListArray") // Persistent Local Data Storage Using UserDefaults
-				
-				// Reload the table view to reflect the changes
+				Item.itemArray.append(newItemText)
+				Item.itemStates.append(false) // Set the initial state of the new item as unchecked
+				self.saveItems()
 				self.tableView.reloadData()
 			}
 		}
-		
+
 		alert.addTextField { alertTextField in
 			alertTextField.placeholder = "Create new item"
 		}
-		
+
 		alert.addAction(action)
-		
+
 		present(alert, animated: true, completion: nil)
+	}
+	
+	// MARK: - Data Persistence
+
+	func saveItems() {
+		UserDefaults.standard.set(Item.itemArray, forKey: "TodoListArray")
+		UserDefaults.standard.set(Item.itemStates, forKey: "TodoListStates")
+	}
+
+	func loadItems() {
+		if let items = UserDefaults.standard.array(forKey: "TodoListArray") as? [String] {
+			Item.itemArray = items
+		}
+		if let states = UserDefaults.standard.array(forKey: "TodoListStates") as? [Bool] {
+			Item.itemStates = states
+		}
 	}
 	
 }
