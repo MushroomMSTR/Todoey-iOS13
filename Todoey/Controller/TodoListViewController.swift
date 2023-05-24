@@ -7,9 +7,12 @@
 
 import UIKit
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: UITableViewController, UISearchBarDelegate {
 	
 	private var dataModel = DataModel()
+	
+	// Create a property to store the filtered items
+	private var filteredItems: [Item] = []
 	
 	override func didReceiveMemoryWarning() {
 		super.didReceiveMemoryWarning()
@@ -28,15 +31,24 @@ class TodoListViewController: UITableViewController {
 	// MARK: - TableView Datasource Methods
 	
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return dataModel.getItems().count
+		// Return the count of filtered items if there are any, otherwise return the count of all items
+		return filteredItems.isEmpty ? dataModel.getItems().count : filteredItems.count
 	}
-	
+
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-		let item = dataModel.getItems()[indexPath.row]
+
+		// Get the appropriate item based on whether the items are filtered or not
+		let item: Item
+		if filteredItems.isEmpty {
+			item = dataModel.getItems()[indexPath.row]
+		} else {
+			item = filteredItems[indexPath.row]
+		}
+
 		cell.textLabel?.text = item.title
-		cell.accessoryType = item.done ? .checkmark : .none // Set the accessory type based on the item state
-		
+		cell.accessoryType = item.done ? .checkmark : .none
+
 		return cell
 	}
 	
@@ -60,20 +72,20 @@ class TodoListViewController: UITableViewController {
 			dataModel.updateItem(at: indexPath.row, withUpdatedItem: updatedItem)
 		}
 	}
-
+	
 	override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
 		// Handle accessory button tap logic here
 	}
-
+	
 	override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
 		// Return the desired height for rows in the table view
 		return 44
 	}
-
+	
 	override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
 		// Perform custom cell configuration or animation before the cell is displayed
 	}
-
+	
 	override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
 		// Return true if the row at the specified index path can be edited (e.g., delete or move)
 		return true
@@ -107,4 +119,40 @@ class TodoListViewController: UITableViewController {
 		
 		present(alert, animated: true, completion: nil)
 	}
+	
+	// MARK: - Search bar methods
+	
+	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+		searchBar.resignFirstResponder()
+		if let searchText = searchBar.text {
+			// Filter the items based on the search text
+			filteredItems = dataModel.getItems().filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+		}
+
+		tableView.reloadData()
+	}
+
+	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+		if searchText.isEmpty {
+			// If the search text is empty, clear the filtered items
+			filteredItems.removeAll()
+		} else {
+			// Filter the items based on the search text
+			filteredItems = dataModel.getItems().filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+		}
+
+		tableView.reloadData()
+	}
+
+	func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+		searchBar.text = ""
+		filteredItems.removeAll()
+		tableView.reloadData()
+	}
+	
+	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+		// Hide the keyboard when tapping outside the search bar
+		view.endEditing(true)
+	}
 }
+
