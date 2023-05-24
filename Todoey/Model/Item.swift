@@ -6,62 +6,54 @@
 //
 
 import Foundation
+import RealmSwift
 
-struct Item: Codable {
-	var title: String
-	var done: Bool
+class Item: Object {
+	@objc dynamic var title: String = ""
+	@objc dynamic var done: Bool = false
 }
 
 class DataModel {
-	private let plistURL: URL = {
-		guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-			fatalError("Unable to retrieve documents directory.")
-		}
-		return documentsDirectory.appendingPathComponent("TodoList.plist")
-	}()
+	
+	private let realm = try! Realm()
 	
 	private var items: [Item] = []
 	
-	init() {
-		loadItems()
+	func getItems() -> Results<Item> {
+		return realm.objects(Item.self)
 	}
-	
-	func getItems() -> [Item] {
-		return items
-	}
-	
+
 	func addItem(_ newItem: Item) {
-		items.append(newItem)
-		saveItems()
+		do {
+			try realm.write {
+				realm.add(newItem)
+			}
+		} catch {
+			fatalError("Unable to save item: \(error)")
+		}
 	}
-	
+
 	func deleteItem(at index: Int) {
-		items.remove(at: index)
-		saveItems()
+		let item = items[index]
+		do {
+			try realm.write {
+				realm.delete(item)
+			}
+		} catch {
+			fatalError("Unable to delete item: \(error)")
+		}
 	}
 	
 	func updateItem(at index: Int, withUpdatedItem updatedItem: Item) {
-		items[index] = updatedItem
-		saveItems()
-	}
-	
-	private func saveItems() {
+		let item = items[index]
 		do {
-			let encoder = PropertyListEncoder()
-			let data = try encoder.encode(items)
-			try data.write(to: plistURL)
+			try realm.write {
+				item.title = updatedItem.title
+				item.done = updatedItem.done
+			}
 		} catch {
-			fatalError("Unable to encode and save data: \(error)")
+			fatalError("Unable to update item: \(error)")
 		}
 	}
-	
-	private func loadItems() {
-		do {
-			let data = try Data(contentsOf: plistURL)
-			let decoder = PropertyListDecoder()
-			items = try decoder.decode([Item].self, from: data)
-		} catch {
-			print("Error loading data: \(error)")
-		}
-	}
+
 }

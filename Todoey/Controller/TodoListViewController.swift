@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import RealmSwift
 
 class TodoListViewController: UITableViewController, UISearchBarDelegate {
 	
@@ -57,18 +58,18 @@ class TodoListViewController: UITableViewController, UISearchBarDelegate {
 	override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		if let cell = tableView.cellForRow(at: indexPath) {
 			let item = dataModel.getItems()[indexPath.row]
-			let updatedItem = Item(title: item.title, done: !item.done)
+			let updatedItem = Item(value: ["title": item.title, "done": !item.done] as [String : Any]) // Use the initializer provided by Realm
 			dataModel.updateItem(at: indexPath.row, withUpdatedItem: updatedItem)
 			cell.accessoryType = updatedItem.done ? .checkmark : .none
 		}
 		tableView.deselectRow(at: indexPath, animated: true)
 	}
-	
+
 	override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
 		if let cell = tableView.cellForRow(at: indexPath) {
 			cell.accessoryType = .none
 			let item = dataModel.getItems()[indexPath.row]
-			let updatedItem = Item(title: item.title, done: false)
+			let updatedItem = Item(value: ["title": item.title, "done": false] as [String : Any]) // Use the initializer provided by Realm
 			dataModel.updateItem(at: indexPath.row, withUpdatedItem: updatedItem)
 		}
 	}
@@ -105,7 +106,7 @@ class TodoListViewController: UITableViewController, UISearchBarDelegate {
 		
 		let action = UIAlertAction(title: "Add Item", style: .default) { [weak self] action in
 			if let newItemText = alert.textFields?.first?.text {
-				let newItem = Item(title: newItemText, done: false)
+				let newItem = Item(value: ["title": newItemText, "done": false] as [String : Any]) // Use the initializer provided by Realm
 				self?.dataModel.addItem(newItem)
 				self?.tableView.reloadData()
 			}
