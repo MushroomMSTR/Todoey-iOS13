@@ -34,7 +34,13 @@ class DataModel {
 	}
 
 	func deleteItem(at index: Int) {
+		let items = getItems()
+		guard index < items.count else {
+			fatalError("Invalid index")
+		}
+		
 		let item = items[index]
+		
 		do {
 			try realm.write {
 				realm.delete(item)
